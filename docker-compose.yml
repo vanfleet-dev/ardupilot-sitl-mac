@@ -1,0 +1,23 @@
+services:
+  sitl:
+    image: orthuk/ardupilot-sitl-debian:latest
+    container_name: ardupilot-sitl
+    ports:
+      - "14550:14550/udp"
+      - "14551:14551/udp"
+      - "5760:5760/tcp"
+    volumes:
+      - ./logs:/ardupilot/logs
+      - ./eeprom.bin:/ardupilot/eeprom.bin
+    environment:
+      - SITL_VEHICLE=${SITL_VEHICLE:-ArduPlane}
+      - SITL_FRAME=${SITL_FRAME:-plane}
+    command: >
+      ./Tools/autotest/sim_vehicle.py
+      -v ${SITL_VEHICLE:-ArduPlane}
+      -f ${SITL_FRAME:-plane}
+      --no-mavproxy
+      --out udp:0.0.0.0:14550
+    restart: "no"
+    stdin_open: true
+    tty: true

@@ -1,0 +1,15 @@
+# SITL runtime files
+logs/
+eeprom.bin
+*.bin
+*.log
+
+# macOS
+.DS_Store
+
+# Environment (optional local overrides)
+.env.local
+
+# IDE
+.vscode/
+.idea/
