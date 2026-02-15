@@ -46,6 +46,8 @@ sitl stop
 | Option | Description | Example |
 |--------|-------------|---------|
 | `--frame <name>` | Override default frame | `sitl copter --frame hexa` |
+| `--swarm <n>` | Launch n vehicles as a swarm | `sitl copter --swarm 5` |
+| `--offset-line` | Spread swarm in a line (heading,distance) | `sitl copter --swarm 5 --offset-line 90,10` |
 | `--wipe` | Wipe parameters (fresh start) | `sitl plane --wipe` |
 | `--location <name>` | Start at named location | `sitl copter --location CMAC` |
 | `--speedup <n>` | Simulation speed multiplier | `sitl plane --speedup 10` |
@@ -86,6 +88,110 @@ sitl quadplane
 mavproxy.py --master=localhost:14550
 sitl stop
 ```
+
+## Swarm Mode (Multi-Vehicle Simulation)
+
+Swarm mode allows you to launch multiple vehicles simultaneously, all running the same vehicle type (e.g., 5 copters or 3 planes).
+
+### Starting a Swarm
+
+```bash
+# Basic swarm - 5 copters
+sitl copter --swarm 5
+
+# Swarm at specific location
+sitl copter --swarm 5 --location CMAC
+
+# Swarm with custom formation
+sitl copter --swarm 10 --offset-line 90,10
+
+# Swarm of planes
+sitl plane --swarm 3
+```
+
+### How Swarm Works
+
+- **Auto SYS ID Assignment**: Vehicles automatically get SYS IDs 1, 2, 3, etc.
+- **Formation**: Vehicles spawn in a line to avoid collisions
+  - Default: Heading 90° (east), 10m spacing
+  - Customize with `--offset-line <heading>,<distance>`
+- **Single MAVLink Endpoint**: All vehicles communicate through localhost:14550
+- **MAVProxy Multi-Vehicle Support**: Auto-detects and manages all vehicles
+
+### MAVProxy Swarm Commands
+
+Once connected to a swarm, use these MAVProxy commands:
+
+```bash
+# Connect to swarm
+mavproxy.py --master=localhost:14550
+
+# Switch to specific vehicle (e.g., vehicle #3)
+vehicle 3
+
+# Send command to all vehicles
+alllinks mode guided
+alllinks arm throttle
+alllinks takeoff 40
+
+# Check vehicle status
+vehicle 1
+status
+
+# Vehicle #2
+vehicle 2
+status
+```
+
+### Swarm Examples
+
+**Fleet Takeoff:**
+```bash
+# Terminal 1: Start 5 copters
+sitl copter --swarm 5 --location CMAC
+
+# Terminal 2: Connect MAVProxy
+mavproxy.py --master=localhost:14550
+
+# In MAVProxy:
+alllinks mode guided
+alllinks arm throttle
+alllinks takeoff 40
+```
+
+**Formation Flying:**
+```bash
+# 10 copters in a north-south line (heading 0°), 15m apart
+sitl copter --swarm 10 --offset-line 0,15 --location CMAC
+```
+
+**Large-Scale Testing:**
+```bash
+# 20 copters (maximum recommended)
+sitl copter --swarm 20 --speedup 5
+```
+
+### Swarm Limitations
+
+- All vehicles must be the same type (all copters, all planes, etc.)
+- Maximum recommended: 20 vehicles
+- All vehicles start at the same location type (use offset to space them)
+- Stopping stops the entire swarm (cannot stop individual vehicles)
+
+### Troubleshooting Swarm
+
+**Vehicles not spreading out:**
+- Check offset-line format: `--offset-line <heading>,<distance>`
+- Example: `--offset-line 90,10` = east heading, 10m spacing
+
+**Performance issues with large swarms:**
+- Use `--speedup` to reduce computational load
+- Example: `sitl copter --swarm 15 --speedup 5`
+
+**MAVProxy not detecting all vehicles:**
+- Wait a few seconds after swarm starts for all vehicles to initialize
+- Check swarm status: `sitl status` (shows "Swarm" mode)
+- Verify in MAVProxy: `vehicle list` should show all SYS IDs
 
 ### Fresh Start with Wiped Parameters
 

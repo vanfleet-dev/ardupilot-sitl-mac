@@ -98,6 +98,8 @@ docker pull orthuk/ardupilot-sitl-debian:latest
 | Option | Description | Example |
 |--------|-------------|---------|
 | `--frame <name>` | Override default frame | `sitl copter --frame hexa` |
+| `--swarm <n>` | Launch n vehicles as a swarm | `sitl copter --swarm 5` |
+| `--offset-line` | Spread swarm in a line | `sitl copter --swarm 5 --offset-line 90,10` |
 | `--wipe` | Wipe parameters (fresh start) | `sitl plane --wipe` |
 | `--location <name>` | Start at named location | `sitl copter --location CMAC` |
 | `--speedup <n>` | Simulation speed multiplier | `sitl plane --speedup 10` |
@@ -135,6 +137,34 @@ sitl quadplane
 # ... test ...
 sitl stop
 ```
+
+### Swarm Mode (Multi-Vehicle)
+
+Launch multiple vehicles simultaneously with auto-assigned SYS IDs:
+
+```bash
+# Start 5 copters in a swarm
+sitl copter --swarm 5
+
+# Start 3 planes at CMAC location
+sitl plane --swarm 3 --location CMAC
+
+# Start 10 copters in a line (heading 90°, 10m spacing)
+sitl copter --swarm 10 --offset-line 90,10
+
+# Connect with MAVProxy (auto-detects all vehicles)
+mavproxy.py --master=localhost:14550
+```
+
+**Swarm Features:**
+- All vehicles are the same type (e.g., all copters or all planes)
+- Auto-assigns unique SYS IDs (1, 2, 3, etc.)
+- Vehicles spawn in a line formation to avoid collisions
+- MAVProxy can control all vehicles simultaneously
+- Use `vehicle <n>` in MAVProxy to switch between vehicles
+- Use `alllinks <cmd>` to send commands to all vehicles
+
+**Note:** Maximum recommended swarm size is 20 vehicles for performance.
 
 ### Fresh Start with Wiped Parameters
 

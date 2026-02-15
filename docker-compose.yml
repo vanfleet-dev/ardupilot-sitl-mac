@@ -9,15 +9,15 @@ services:
     volumes:
       - ./logs:/ardupilot/logs
       - ./eeprom.bin:/ardupilot/eeprom.bin
+      - ./docker-entrypoint.sh:/docker-entrypoint.sh
     environment:
       - SITL_VEHICLE=${SITL_VEHICLE:-ArduPlane}
       - SITL_FRAME=${SITL_FRAME:-plane}
-    command: >
-      ./Tools/autotest/sim_vehicle.py
-      -v ${SITL_VEHICLE:-ArduPlane}
-      -f ${SITL_FRAME:-plane}
-      --no-mavproxy
-      --out udp:0.0.0.0:14550
+      - SWARM_MODE=${SWARM_MODE:-false}
+      - SWARM_COUNT=${SWARM_COUNT:-}
+      - OFFSET_LINE=${OFFSET_LINE:-90,10}
+      - SITL_LOCATION=${SITL_LOCATION:-CMAC}
+    entrypoint: ["/bin/bash", "/docker-entrypoint.sh"]
     restart: "no"
     stdin_open: true
     tty: true
