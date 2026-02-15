@@ -20,6 +20,8 @@ echo "Frame: $SITL_FRAME"
 echo "Mode: $([ "$SWARM_MODE" = "true" ] && echo "Swarm ($SWARM_COUNT vehicles)" || echo "Single Vehicle")"
 echo "========================================="
 
+cd /home/docker/ardupilot
+
 if [ "$SWARM_MODE" = "true" ] && [ -n "$SWARM_COUNT" ]; then
     echo ""
     echo "Starting SITL Swarm..."
@@ -27,8 +29,16 @@ if [ "$SWARM_MODE" = "true" ] && [ -n "$SWARM_COUNT" ]; then
     echo "Location: $SITL_LOCATION"
     echo "Offset: $OFFSET_LINE"
     echo ""
+    echo "MAVLink Ports (TCP):"
+    for i in $(seq 0 $((SWARM_COUNT - 1))); do
+        port=$((5760 + i))
+        sysid=$((i + 1))
+        echo "  Vehicle $sysid: localhost:$port (TCP)"
+    done
+    echo ""
     
-    cd /home/docker/ardupilot
+    # In swarm mode without mavproxy, each instance listens on TCP port 5760+i
+    # We use --auto-sysid to assign SYS IDs automatically
     exec ./Tools/autotest/sim_vehicle.py \
         -v "$SITL_VEHICLE" \
         -f "$SITL_FRAME" \
@@ -36,14 +46,13 @@ if [ "$SWARM_MODE" = "true" ] && [ -n "$SWARM_COUNT" ]; then
         --count "$SWARM_COUNT" \
         --auto-sysid \
         --location "$SITL_LOCATION" \
-        --auto-offset-line "$OFFSET_LINE" \
-        --out udp:0.0.0.0:14550
+        --auto-offset-line "$OFFSET_LINE"
 else
     echo ""
     echo "Starting Single Vehicle SITL..."
+    echo "MAVLink: localhost:14550 (UDP)"
     echo ""
     
-    cd /home/docker/ardupilot
     exec ./Tools/autotest/sim_vehicle.py \
         -v "$SITL_VEHICLE" \
         -f "$SITL_FRAME" \

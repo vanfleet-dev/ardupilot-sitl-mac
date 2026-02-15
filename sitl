@@ -75,9 +75,11 @@ Examples:
 
 After starting SITL, connect with your local MAVProxy:
   Single vehicle:   mavproxy.py --master=localhost:14550
-  Swarm:            mavproxy.py --master=localhost:14550 (auto-detects all)
+  Swarm:            mavproxy.py --master=tcp:localhost:5760 --master=tcp:localhost:5761 ...
 
-MAVLink Endpoint: localhost:14550 (UDP)
+MAVLink Endpoints:
+  Single vehicle: localhost:14550 (UDP)
+  Swarm:          tcp:localhost:5760,5761,5762... (one port per vehicle)
 
 Swarm Mode:
   - All vehicles must be the same type
@@ -138,8 +140,8 @@ start_sitl() {
         export SWARM_MODE="true"
         export SITL_LOCATION="${SITL_LOCATION:-CMAC}"
         
-        # Start container with swarm profile
-        docker-compose -f "$DOCKER_COMPOSE_FILE" --profile swarm up -d
+        # Start container
+        docker-compose -f "$DOCKER_COMPOSE_FILE" up -d
         
         # Wait for initialization
         sleep 3
@@ -147,10 +149,25 @@ start_sitl() {
         if [ "$(get_container_status)" != "not running" ]; then
             log_info "Swarm started successfully!"
             log_info "Vehicles: $swarm_count $vehicle(s) with SYS IDs 1-$swarm_count"
-            log_info "MAVLink endpoint: localhost:14550 (UDP)"
+            log_info ""
+            log_info "MAVLink endpoints (TCP):"
+            local i=0
+            while [ $i -lt "$swarm_count" ]; do
+                local port=$((5760 + i * 10))
+                local sysid=$((i + 1))
+                log_info "  Vehicle $sysid: tcp:localhost:$port"
+                i=$((i + 1))
+            done
             log_info ""
             log_info "Connect with your local MAVProxy:"
-            log_info "  mavproxy.py --master=localhost:14550"
+            local master_args=""
+            i=0
+            while [ $i -lt "$swarm_count" ]; do
+                local port=$((5760 + i * 10))
+                master_args="$master_args --master=tcp:localhost:$port"
+                i=$((i + 1))
+            done
+            log_info "  mavproxy.py$master_args"
             log_info ""
             log_info "MAVProxy multi-vehicle commands:"
             log_info "  vehicle <n>     - Switch to vehicle n"
@@ -211,15 +228,24 @@ show_status() {
     else
         echo "SITL Status: Running"
         echo "Container: $CONTAINER_NAME"
-        echo "MAVLink: localhost:14550 (UDP)"
         
         # Check if running in swarm mode
         local swarm_check=$(docker exec $CONTAINER_NAME printenv SWARM_MODE 2>/dev/null || echo "false")
-        if [ "$swarm_check" = "true" ]; then
-            local count=$(docker exec $CONTAINER_NAME printenv SWARM_COUNT 2>/dev/null || echo "?")
-            echo "Mode: Swarm ($count vehicles)"
+        local swarm_count=$(docker exec $CONTAINER_NAME printenv SWARM_COUNT 2>/dev/null || echo "")
+        
+        if [ "$swarm_check" = "true" ] && [ -n "$swarm_count" ]; then
+            echo "Mode: Swarm ($swarm_count vehicles)"
+            echo "MAVLink (TCP):"
+            local i=0
+            while [ $i -lt "$swarm_count" ]; do
+                local port=$((5760 + i * 10))
+                local sysid=$((i + 1))
+                echo "  Vehicle $sysid: tcp:localhost:$port"
+                i=$((i + 1))
+            done
         else
             echo "Mode: Single Vehicle"
+            echo "MAVLink: localhost:14550 (UDP)"
         fi
         
         echo ""
