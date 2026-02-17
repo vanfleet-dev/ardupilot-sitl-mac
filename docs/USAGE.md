@@ -1,6 +1,6 @@
 # ArduPilot SITL Usage Guide
 
-Headless Docker-based SITL environment for testing MAVProxy changes on macOS.
+Headless Docker-based SITL environment for testing MAVProxy changes on macOS and Linux.
 
 ## Quick Start
 

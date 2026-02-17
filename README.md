@@ -1,9 +1,10 @@
-# ArduPilot SITL for macOS
+# ArduPilot SITL CLI
 
 [![Docker](https://img.shields.io/badge/docker-required-blue.svg)](https://docker.com)
+[![Platform](https://img.shields.io/badge/platform-macos%20%7C%20linux-lightgrey.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Simple CLI wrapper for running ArduPilot SITL (Software In The Loop) on macOS using Docker.
+Simple CLI wrapper for running ArduPilot SITL (Software In The Loop) on macOS and Linux using Docker.
 
 Perfect for MAVProxy development and testing without physical hardware.
 
@@ -12,26 +13,40 @@ Perfect for MAVProxy development and testing without physical hardware.
 - **Headless**: No GUI dependencies or X11 setup required
 - **Simple CLI**: Just type `sitl plane` or `sitl copter`
 - **Multiple Vehicles**: Support for Plane, Copter, QuadPlane, Rover, and more
-- **MAVProxy Ready**: Connect your local MAVProxy installation via localhost:14550
-- **Cross-Platform**: Works on both Intel and Apple Silicon Macs
+- **Swarm Mode**: Launch multiple vehicles simultaneously
+- **MAVProxy Ready**: Connect your local MAVProxy installation
+- **Cross-Platform**: Works on macOS (Intel/Apple Silicon) and Linux (Ubuntu/Debian)
 - **Isolated**: Docker container keeps your system clean
 
 ## Prerequisites
 
-**One-time setup required:**
+### macOS
 
 1. **Docker Desktop** - [Download and install](https://www.docker.com/products/docker-desktop/)
    - Start Docker Desktop after installation
    - No additional Docker configuration needed
 
-2. **Git** - Usually pre-installed on macOS, or install via [Homebrew](https://brew.sh)
+2. **Git** - Usually pre-installed, or install via [Homebrew](https://brew.sh)
+
+### Linux (Ubuntu/Debian)
+
+1. **Docker Engine**:
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y docker.io docker-compose
+   sudo usermod -aG docker $USER
+   # Logout and login again for group changes to take effect
+   newgrp docker
+   ```
+
+2. **Git** - Usually pre-installed, or `sudo apt-get install git`
 
 ## Quick Start
 
 ```bash
 # Clone the repository
-git clone https://github.com/vanfleet-dev/ardupilot-sitl-mac.git
-cd ardupilot-sitl-mac
+git clone https://github.com/vanfleet-dev/sitl-cli.git
+cd sitl-cli
 
 # Run the install script
 ./install.sh
@@ -46,10 +61,12 @@ mavproxy.py --master=localhost:14550
 ## Installation
 
 The `install.sh` script will:
+- Detect your platform (macOS or Linux)
 - Check that Docker is installed and running
 - Create `~/bin` directory if it doesn't exist
 - Install the `sitl` command to your PATH
 - Set executable permissions
+- Pull the Docker image
 
 **Manual Installation:**
 
@@ -152,8 +169,8 @@ sitl plane --swarm 3 --location CMAC
 # Start 10 copters in a line (heading 90°, 10m spacing)
 sitl copter --swarm 10 --offset-line 90,10
 
-# Connect with MAVProxy (auto-detects all vehicles)
-mavproxy.py --master=localhost:14550
+# Connect with MAVProxy
+mavproxy.py --master=tcp:localhost:5760 --master=tcp:localhost:5770
 ```
 
 **Swarm Features:**
@@ -180,13 +197,15 @@ sitl copter --location CMAC
 
 ## MAVProxy Connection
 
+### Single Vehicle Mode
+
 SITL exposes MAVLink on UDP port 14550:
 
 ```bash
 # Standard connection
 mavproxy.py --master=localhost:14550
 
-# With console and map (requires XQuartz if using GUI)
+# With console and map (requires X11/XQuartz if using GUI)
 mavproxy.py --master=localhost:14550 --console --map
 ```
 
@@ -194,6 +213,24 @@ mavproxy.py --master=localhost:14550 --console --map
 - Protocol: UDP
 - Host: localhost (127.0.0.1)
 - Port: 14550
+
+### Swarm Mode
+
+In swarm mode, each vehicle uses a separate TCP port:
+
+```bash
+# 2 vehicles
+mavproxy.py --master=tcp:localhost:5760 --master=tcp:localhost:5770
+
+# 3 vehicles
+mavproxy.py --master=tcp:localhost:5760 --master=tcp:localhost:5770 --master=tcp:localhost:5780
+```
+
+**Port Mapping:**
+- Vehicle 1 (SYS ID 1): tcp:localhost:5760
+- Vehicle 2 (SYS ID 2): tcp:localhost:5770
+- Vehicle 3 (SYS ID 3): tcp:localhost:5780
+- etc. (increments of 10)
 
 ## Documentation
 
@@ -203,20 +240,21 @@ mavproxy.py --master=localhost:14550 --console --map
 ## How It Works
 
 ```
-┌─────────────────┐         ┌──────────────────┐
-│   Your Mac      │         │  Docker Container │
-│                 │  UDP    │                  │
-│  mavproxy.py    │◄───────►│  ArduPilot SITL  │
-│  (localhost)    │ :14550  │  (Debian-based)  │
-│                 │         │                  │
-└─────────────────┘         └──────────────────┘
+┌─────────────────────┐         ┌──────────────────┐
+│   Your Computer     │         │  Docker Container │
+│   (macOS/Linux)     │  TCP/UDP│                  │
+│                     │◄───────►│  ArduPilot SITL  │
+│  mavproxy.py        │ :14550  │  (Debian-based)  │
+│                     │         │                  │
+└─────────────────────┘         └──────────────────┘
 ```
 
 1. `sitl plane` starts a Docker container with ArduPilot SITL
 2. SITL runs in headless mode (no MAVProxy inside container)
-3. SITL outputs MAVLink on UDP port 14550
-4. Your local MAVProxy connects to localhost:14550
-5. `sitl stop` removes the container
+3. Single vehicle: SITL outputs MAVLink on UDP port 14550
+4. Swarm mode: Each vehicle uses TCP ports 5760, 5770, 5780, etc.
+5. Your local MAVProxy connects to localhost ports
+6. `sitl stop` removes the container
 
 ## Development
 
@@ -229,16 +267,26 @@ This project is designed for MAVProxy development:
 
 ## Requirements
 
+### macOS
 - macOS 10.14+ (Intel or Apple Silicon)
 - Docker Desktop 4.0+
+
+### Linux
+- Ubuntu 18.04+ or Debian 10+
+- Docker Engine 20.0+
+- User must be in `docker` group
+
+### Common
 - ~4GB free disk space (for Docker image)
+- Git
 
 ## File Structure
 
 ```
-ardupilot-sitl-mac/
+sitl-cli/
 ├── sitl                 # CLI script
 ├── docker-compose.yml   # Docker configuration
+├── docker-entrypoint.sh # Container entrypoint
 ├── install.sh          # Installation script
 ├── docs/
 │   └── USAGE.md        # Detailed documentation
@@ -247,6 +295,16 @@ ardupilot-sitl-mac/
 ```
 
 ## Troubleshooting
+
+**Docker permission denied (Linux):**
+```bash
+# Add user to docker group
+sudo usermod -aG docker $USER
+
+# Apply changes
+newgrp docker
+# or logout and login again
+```
 
 **SITL won't start:**
 ```bash

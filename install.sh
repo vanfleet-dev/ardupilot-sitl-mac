@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# ArduPilot SITL for macOS - Installation Script
-# This script installs the sitl CLI command to your system
+# ArduPilot SITL CLI - Installation Script
+# Supports macOS and Linux (Ubuntu/Debian)
 
 set -e
 
@@ -14,6 +14,18 @@ NC='\033[0m' # No Color
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Detect platform
+detect_platform() {
+    case "$(uname -s)" in
+        Darwin*) PLATFORM="macos" ;;
+        Linux*)  PLATFORM="linux" ;;
+        *)       PLATFORM="unknown" ;;
+    esac
+    echo "$PLATFORM"
+}
+
+PLATFORM=$(detect_platform)
 
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
@@ -37,16 +49,35 @@ check_docker() {
     if ! command -v docker &> /dev/null; then
         log_error "Docker is not installed!"
         echo ""
-        echo "Please install Docker Desktop first:"
-        echo "  https://www.docker.com/products/docker-desktop/"
+        
+        if [ "$PLATFORM" = "linux" ]; then
+            echo "Install Docker on Ubuntu/Debian:"
+            echo "  sudo apt-get update"
+            echo "  sudo apt-get install -y docker.io docker-compose"
+            echo "  sudo usermod -aG docker \$USER"
+            echo "  newgrp docker  # or logout/login"
+        else
+            echo "Install Docker Desktop:"
+            echo "  https://docker.com/products/docker-desktop/"
+        fi
         echo ""
         exit 1
     fi
     
     if ! docker info &> /dev/null; then
-        log_error "Docker daemon is not running!"
+        log_error "Docker daemon is not running or permission denied!"
         echo ""
-        echo "Please start Docker Desktop and wait for it to initialize."
+        
+        if [ "$PLATFORM" = "linux" ]; then
+            echo "Docker is installed but not accessible. Try:"
+            echo "  1. Start Docker service: sudo systemctl start docker"
+            echo "  2. Add user to docker group: sudo usermod -aG docker \$USER"
+            echo "  3. Apply group changes: newgrp docker"
+            echo ""
+            echo "Note: You may need to logout and login again for group changes."
+        else
+            echo "Please start Docker Desktop and wait for it to initialize."
+        fi
         echo ""
         exit 1
     fi
@@ -71,11 +102,16 @@ check_bin_directory() {
         echo "Add the following to your shell configuration file:"
         echo "  export PATH=\"\$HOME/bin:\$PATH\""
         echo ""
-        echo "For bash: ~/.bashrc"
-        echo "For zsh: ~/.zshrc"
+        if [ "$PLATFORM" = "linux" ]; then
+            echo "For bash: ~/.bashrc"
+            echo "For zsh: ~/.zshrc"
+        else
+            echo "For bash: ~/.bashrc"
+            echo "For zsh: ~/.zshrc"
+        fi
         echo ""
         echo "Then reload your shell configuration:"
-        echo "  source ~/.zshrc  # or ~/.bashrc"
+        echo "  source ~/.bashrc  # or ~/.zshrc"
         echo ""
     else
         log_info "~/bin is in PATH ✓"
@@ -128,7 +164,11 @@ verify_installation() {
         fi
     else
         log_warn "sitl command not found in PATH"
-        log_info "You may need to restart your terminal or run: source ~/.zshrc"
+        if [ "$PLATFORM" = "linux" ]; then
+            log_info "You may need to restart your terminal or run: source ~/.bashrc"
+        else
+            log_info "You may need to restart your terminal or run: source ~/.zshrc"
+        fi
     fi
 }
 
@@ -150,12 +190,25 @@ print_success() {
     echo "For detailed usage: sitl --help"
     echo "Documentation: docs/USAGE.md"
     echo ""
+    
+    if [ "$PLATFORM" = "linux" ]; then
+        echo "Platform: Linux ✓"
+    else
+        echo "Platform: macOS ✓"
+    fi
+    echo ""
 }
 
 main() {
     echo ""
-    echo -e "${BLUE}ArduPilot SITL for macOS - Installer${NC}"
+    echo -e "${BLUE}ArduPilot SITL CLI - Installer${NC}"
     echo ""
+    
+    if [ "$PLATFORM" = "unknown" ]; then
+        log_warn "Unknown platform detected. Proceeding anyway..."
+        echo "Supported platforms: macOS, Linux (Ubuntu/Debian)"
+        echo ""
+    fi
     
     check_docker
     check_bin_directory
