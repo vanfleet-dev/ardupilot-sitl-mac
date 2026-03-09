@@ -13,6 +13,7 @@ services:
       - ./eeprom.bin:/ardupilot/eeprom.bin
       - ./docker-entrypoint.sh:/docker-entrypoint.sh:ro
       - ./locations.txt:/root/ardupilot/Tools/autotest/locations.txt:ro
+      - ~/waypoints:/root/waypoints:ro
     environment:
       - SITL_VEHICLE=${SITL_VEHICLE:-ArduPlane}
       - SITL_FRAME=${SITL_FRAME:-plane}
