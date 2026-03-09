@@ -87,6 +87,7 @@ chmod +x ~/bin/sitl
 # 5. Copy supporting files to ~/bin
 cp docker-compose.yml ~/bin/
 cp docker-entrypoint.sh ~/bin/
+cp locations.txt ~/bin/
 
 # 6. Ensure ~/bin is in your PATH
 export PATH="$HOME/bin:$PATH"
@@ -120,6 +121,7 @@ chmod +x ~/bin/sitl
 # 5. Copy supporting files to ~/bin
 cp docker-compose.yml ~/bin/
 cp docker-entrypoint.sh ~/bin/
+cp locations.txt ~/bin/
 
 # 6. Ensure ~/bin is in your PATH
 export PATH="$HOME/bin:$PATH"
@@ -158,6 +160,7 @@ chmod +x ~/bin/sitl
 # 6. Copy supporting files to ~/bin
 cp docker-compose.yml ~/bin/
 cp docker-entrypoint.sh ~/bin/
+cp locations.txt ~/bin/
 
 # 7. Ensure ~/bin is in your PATH
 export PATH="$HOME/bin:$PATH"
@@ -195,6 +198,7 @@ chmod +x ~/bin/sitl
 # 6. Copy supporting files to ~/bin
 cp docker-compose.yml ~/bin/
 cp docker-entrypoint.sh ~/bin/
+cp locations.txt ~/bin/
 
 # 7. Ensure ~/bin is in your PATH
 export PATH="$HOME/bin:$PATH"
