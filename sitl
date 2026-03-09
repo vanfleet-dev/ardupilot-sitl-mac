@@ -126,6 +126,7 @@ start_sitl() {
     local extra_args=$3
     local swarm_count=$4
     local offset_line=$5
+    local location=$6
     
     check_docker
     
@@ -148,7 +149,7 @@ start_sitl() {
         export SWARM_COUNT="$swarm_count"
         export OFFSET_LINE="$offset_line"
         export SWARM_MODE="true"
-        export SITL_LOCATION="${SITL_LOCATION:-CMAC}"
+        export SITL_LOCATION="${location:-CMAC}"
         
         # Change to script directory so relative paths in docker-compose work
         cd "$SCRIPT_DIR"
@@ -195,6 +196,7 @@ start_sitl() {
         # Set environment variables for single vehicle
         export SITL_VEHICLE="$vehicle"
         export SITL_FRAME="$frame"
+        export SITL_LOCATION="${location:-CMAC}"
         export SWARM_MODE="false"
         unset SWARM_COUNT
         unset OFFSET_LINE
@@ -301,6 +303,7 @@ parse_args() {
     local extra_args=""
     local swarm_count=""
     local offset_line="90,10"  # Default: 90 degrees, 10 meters
+    local location=""
     
     case "$1" in
         plane)
@@ -399,6 +402,7 @@ parse_args() {
                 shift
                 ;;
             --location|-L)
+                location="$2"
                 extra_args="$extra_args -L $2"
                 shift 2
                 ;;
@@ -413,7 +417,7 @@ parse_args() {
         esac
     done
     
-    start_sitl "$vehicle" "$frame" "$extra_args" "$swarm_count" "$offset_line"
+    start_sitl "$vehicle" "$frame" "$extra_args" "$swarm_count" "$offset_line" "$location"
 }
 
 # Main entry point
