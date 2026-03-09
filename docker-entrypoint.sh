@@ -65,7 +65,13 @@ else
         if [ -f "/root/ardupilot/Tools/autotest/locations.txt" ]; then
             HOME_COORDS=$(grep "^$SITL_LOCATION=" /root/ardupilot/Tools/autotest/locations.txt | cut -d'=' -f2 | cut -d'#' -f1)
             if [ -n "$HOME_COORDS" ]; then
-                exec "$BINARY" -S --model "$SITL_FRAME" --home "$HOME_COORDS"
+                # Set defaults file based on frame type
+                DEFAULTS_FILE="/root/ardupilot/Tools/autotest/default_params/$SITL_FRAME.parm"
+                if [ -f "$DEFAULTS_FILE" ]; then
+                    exec "$BINARY" -S --model "$SITL_FRAME" --home "$HOME_COORDS" --defaults "$DEFAULTS_FILE"
+                else
+                    exec "$BINARY" -S --model "$SITL_FRAME" --home "$HOME_COORDS"
+                fi
             else
                 exec "$BINARY" -S --model "$SITL_FRAME"
             fi
