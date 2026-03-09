@@ -257,6 +257,32 @@ This will:
 | `--location <name>` | Start at named location | `sitl copter --location CMAC` |
 | `--speedup <n>` | Simulation speed multiplier | `sitl plane --speedup 10` |
 
+### Custom Locations
+
+You can start SITL at custom locations by editing the `locations.txt` file:
+
+**Default locations included:**
+- `CMAC` - Canberra, Australia (default ArduPilot test location)
+- `Ballarat` - Ballarat, Australia
+- `Kingaroy` - Kingaroy, Australia
+- `AVC` - Boulder, Colorado
+
+**Adding custom locations:**
+
+1. Edit `locations.txt` in your sitl-cli directory:
+```bash
+# Format: NAME=latitude,longitude,absolute-altitude,heading
+MyHomeField=40.7128,-74.0060,10,0
+LocalPark=37.7749,-122.4194,50,270
+```
+
+2. Use your custom location:
+```bash
+sitl plane --location MyHomeField
+```
+
+**Built-in locations:** View all available locations in `locations.txt` or check the [ArduPilot locations documentation](https://ardupilot.org/dev/docs/sitl-simulator-software-in-the-loop.html#predefined-locations).
+
 ## Usage Examples
 
 ### Basic Testing Workflow
