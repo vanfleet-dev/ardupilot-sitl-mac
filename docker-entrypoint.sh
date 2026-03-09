@@ -20,7 +20,7 @@ echo "Frame: $SITL_FRAME"
 echo "Mode: $([ "$SWARM_MODE" = "true" ] && echo "Swarm ($SWARM_COUNT vehicles)" || echo "Single Vehicle")"
 echo "========================================="
 
-cd /home/docker/ardupilot
+cd /root/ardupilot
 
 if [ "$SWARM_MODE" = "true" ] && [ -n "$SWARM_COUNT" ]; then
     echo ""
@@ -31,14 +31,12 @@ if [ "$SWARM_MODE" = "true" ] && [ -n "$SWARM_COUNT" ]; then
     echo ""
     echo "MAVLink Ports (TCP):"
     for i in $(seq 0 $((SWARM_COUNT - 1))); do
-        port=$((5760 + i))
+        port=$((5760 + i * 10))
         sysid=$((i + 1))
-        echo "  Vehicle $sysid: localhost:$port (TCP)"
+        echo "  Vehicle $sysid: tcp:localhost:$port"
     done
     echo ""
     
-    # In swarm mode without mavproxy, each instance listens on TCP port 5760+i
-    # We use --auto-sysid to assign SYS IDs automatically
     exec ./Tools/autotest/sim_vehicle.py \
         -v "$SITL_VEHICLE" \
         -f "$SITL_FRAME" \
@@ -50,12 +48,11 @@ if [ "$SWARM_MODE" = "true" ] && [ -n "$SWARM_COUNT" ]; then
 else
     echo ""
     echo "Starting Single Vehicle SITL..."
-    echo "MAVLink: localhost:14550 (UDP)"
+    echo "MAVLink: tcp:localhost:5760"
     echo ""
     
     exec ./Tools/autotest/sim_vehicle.py \
         -v "$SITL_VEHICLE" \
         -f "$SITL_FRAME" \
-        --no-mavproxy \
-        --out udp:0.0.0.0:14550
+        --no-mavproxy
 fi

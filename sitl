@@ -7,7 +7,7 @@ set -e
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DOCKER_COMPOSE_FILE="$SCRIPT_DIR/../sitl/docker-compose.yml"
+DOCKER_COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
 CONTAINER_NAME="ardupilot-sitl"
 
 # Colors for output
@@ -74,12 +74,12 @@ Examples:
   sitl quadplane --wipe                   # Start quadplane, wipe params
 
 After starting SITL, connect with your local MAVProxy:
-  Single vehicle:   mavproxy.py --master=localhost:14550
-  Swarm:            mavproxy.py --master=tcp:localhost:5760 --master=tcp:localhost:5761 ...
+  Single vehicle:   mavproxy.py --master=tcp:localhost:5760
+  Swarm:            mavproxy.py --master=tcp:localhost:5760 --master=tcp:localhost:5770 ...
 
 MAVLink Endpoints:
-  Single vehicle: localhost:14550 (UDP)
-  Swarm:          tcp:localhost:5760,5761,5762... (one port per vehicle)
+  Single vehicle: tcp:localhost:5760
+  Swarm:          tcp:localhost:5760, 5770, 5780... (one port per vehicle)
 
 Swarm Mode:
   - All vehicles must be the same type
@@ -91,12 +91,12 @@ EOF
 
 check_docker() {
     if ! command -v docker &> /dev/null; then
-        log_error "Docker not found. Please install Docker Desktop."
+        log_error "Docker not found. Please install Docker."
         exit 1
     fi
     
     if ! docker info &> /dev/null; then
-        log_error "Docker daemon not running. Please start Docker Desktop."
+        log_error "Docker daemon is not running!"
         exit 1
     fi
 }
@@ -141,7 +141,7 @@ start_sitl() {
         export SITL_LOCATION="${SITL_LOCATION:-CMAC}"
         
         # Start container
-        docker-compose -f "$DOCKER_COMPOSE_FILE" up -d
+        docker compose -f "$DOCKER_COMPOSE_FILE" up -d
         
         # Wait for initialization
         sleep 3
@@ -187,17 +187,17 @@ start_sitl() {
         unset OFFSET_LINE
         
         # Start container
-        docker-compose -f "$DOCKER_COMPOSE_FILE" up -d
+        docker compose -f "$DOCKER_COMPOSE_FILE" up -d
         
         # Wait a moment for SITL to initialize
         sleep 2
         
         if [ "$(get_container_status)" != "not running" ]; then
             log_info "SITL started successfully!"
-            log_info "MAVLink endpoint: localhost:14550 (UDP)"
+            log_info "MAVLink endpoint: tcp:localhost:5760"
             log_info ""
             log_info "Connect with your local MAVProxy:"
-            log_info "  mavproxy.py --master=localhost:14550"
+            log_info "  mavproxy.py --master=tcp:localhost:5760"
         else
             log_error "Failed to start SITL. Check logs with: sitl logs"
             exit 1
@@ -214,7 +214,7 @@ stop_sitl() {
     fi
     
     log_info "Stopping SITL..."
-    docker-compose -f "$DOCKER_COMPOSE_FILE" --profile swarm down 2>/dev/null || docker-compose -f "$DOCKER_COMPOSE_FILE" down
+    docker compose -f "$DOCKER_COMPOSE_FILE" down
     log_info "SITL stopped"
 }
 
@@ -245,7 +245,7 @@ show_status() {
             done
         else
             echo "Mode: Single Vehicle"
-            echo "MAVLink: localhost:14550 (UDP)"
+            echo "MAVLink: tcp:localhost:5760"
         fi
         
         echo ""

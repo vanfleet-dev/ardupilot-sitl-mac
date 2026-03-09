@@ -9,7 +9,7 @@ Headless Docker-based SITL environment for testing MAVProxy changes on macOS and
 sitl plane
 
 # In another terminal, connect with your MAVProxy
-mavproxy.py --master=localhost:14550
+mavproxy.py --master=tcp:localhost:5760
 
 # When done
 sitl stop

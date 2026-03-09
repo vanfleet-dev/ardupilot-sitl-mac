@@ -55,7 +55,7 @@ cd sitl-cli
 sitl plane
 
 # In another terminal, connect with your MAVProxy
-mavproxy.py --master=localhost:14550
+mavproxy.py --master=tcp:localhost:5760
 ```
 
 ## Installation
@@ -81,7 +81,7 @@ cp sitl ~/bin/sitl
 chmod +x ~/bin/sitl
 
 # Pull the Docker image
-docker pull orthuk/ardupilot-sitl-debian:latest
+docker pull vanfleetdev/sitl-ardupilot:4.6.3
 ```
 
 ## Commands
@@ -130,7 +130,7 @@ docker pull orthuk/ardupilot-sitl-debian:latest
 sitl plane
 
 # Terminal 2: Connect with MAVProxy
-mavproxy.py --master=localhost:14550
+mavproxy.py --master=tcp:localhost:5760
 
 # When done
 sitl stop
@@ -199,20 +199,20 @@ sitl copter --location CMAC
 
 ### Single Vehicle Mode
 
-SITL exposes MAVLink on UDP port 14550:
+SITL exposes MAVLink on TCP port 5760:
 
 ```bash
 # Standard connection
-mavproxy.py --master=localhost:14550
+mavproxy.py --master=tcp:localhost:5760
 
 # With console and map (requires X11/XQuartz if using GUI)
-mavproxy.py --master=localhost:14550 --console --map
+mavproxy.py --master=tcp:localhost:5760 --console --map
 ```
 
 **Connection Details:**
-- Protocol: UDP
+- Protocol: TCP
 - Host: localhost (127.0.0.1)
-- Port: 14550
+- Port: 5760
 
 ### Swarm Mode
 
@@ -251,7 +251,7 @@ mavproxy.py --master=tcp:localhost:5760 --master=tcp:localhost:5770 --master=tcp
 
 1. `sitl plane` starts a Docker container with ArduPilot SITL
 2. SITL runs in headless mode (no MAVProxy inside container)
-3. Single vehicle: SITL outputs MAVLink on UDP port 14550
+3. Single vehicle: SITL outputs MAVLink on TCP port 5760
 4. Swarm mode: Each vehicle uses TCP ports 5760, 5770, 5780, etc.
 5. Your local MAVProxy connects to localhost ports
 6. `sitl stop` removes the container
@@ -328,7 +328,7 @@ sitl status
 sitl logs
 
 # Verify port is listening
-lsof -i :14550
+lsof -i :5760
 ```
 
 See [docs/USAGE.md](docs/USAGE.md#troubleshooting) for more troubleshooting tips.
@@ -339,7 +339,7 @@ Contributions welcome! Please feel free to submit issues or pull requests.
 
 ## Acknowledgments
 
-- Docker image: [orthuk/ardupilot-sitl-debian](https://hub.docker.com/r/orthuk/ardupilot-sitl-debian) by [ben-xD](https://github.com/ben-xD/ardupilot-sitl-docker)
+- Docker image: [vanfleetdev/sitl-ardupilot](https://hub.docker.com/r/vanfleetdev/sitl-ardupilot) with ArduPilot 4.6.3
 - ArduPilot: [ardupilot.org](https://ardupilot.org)
 - MAVProxy: [ardupilot.org/mavproxy](https://ardupilot.org/mavproxy)
 

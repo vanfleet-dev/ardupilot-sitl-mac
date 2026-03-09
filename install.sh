@@ -142,7 +142,7 @@ pull_docker_image() {
     log_info "This may take a few minutes depending on your connection..."
     echo ""
     
-    if docker pull orthuk/ardupilot-sitl-debian:latest; then
+    if docker pull vanfleetdev/sitl-ardupilot:4.6.3; then
         log_info "Docker image pulled successfully ✓"
     else
         log_error "Failed to pull Docker image!"
@@ -180,7 +180,7 @@ print_success() {
     echo ""
     echo "Quick Start:"
     echo "  1. Start SITL:     sitl plane"
-    echo "  2. Connect:        mavproxy.py --master=localhost:14550"
+    echo "  2. Connect:        mavproxy.py --master=tcp:localhost:5760"
     echo "  3. Stop SITL:      sitl stop"
     echo ""
     echo "Available commands:"

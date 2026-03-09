@@ -1,10 +1,10 @@
 services:
   sitl:
-    image: orthuk/ardupilot-sitl-debian:latest
+    image: vanfleetdev/sitl-ardupilot:4.6.3
     container_name: ardupilot-sitl
     ports:
-      # UDP port for single vehicle mode
-      - "14550:14550/udp"
+      # TCP port for single vehicle mode
+      - "5760:5760/tcp"
       # TCP ports for swarm mode (5760-5790 covers up to 30 vehicles)
       - "5760-5790:5760-5790/tcp"
     volumes:
